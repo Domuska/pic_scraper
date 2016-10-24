@@ -7,8 +7,9 @@ import os.path
 #praw api http://praw.readthedocs.io/en/stable/index.html#main-page
 #gfycat api https://developers.gfycat.com/api/
 
-global client_ID 
-client_ID = 
+global imgur_client_id 
+imgur_client_id =
+gfycat_client_id = 
 
 def get_pics_by_subreddit(subreddit, limit):
 	user_agent = "windows:testing_agent:0.1 (by /u/Domuska)"
@@ -77,12 +78,40 @@ def get_pics_by_subreddit(subreddit, limit):
 				save_image_with_url_path(url, path_with_extension)
 				
 		#todo: properly handle gfycat urls, read API and implement
+		#gfycat uses only https
+		#todo fix, if html5 video is in giant domain this wont work
+		#dirty fix, not nice, do something more reasonable
 		elif "gfycat" in url:
-			path_with_extension = fullpath + ".webm"
-			save_image_with_url_path(url, path_with_extension)
+			if ".webm" in url:
+				path_with_extension = fullpath + ".webm"
+				print (gfycat_url)
+				save_image_with_url_path(gfycat_url, path_with_extension)
+			elif ".mp4" in url:
+				path_with_extension = fullpath + ".mp4"
+				print (gfycat_url)
+				save_image_with_url_path(gfycat_url, path_with_extension)
+			else:
+				#this try-catch is just for handling the zippy/giant/fat monstrosity
+				try:
+					path_with_extension = fullpath + ".webm"
+					#url = 'zippy.' + url + '.webm'
+					#direct urls to webms in gfycat have zippy/giant/fat and .webm extension in the url in these locations
+					gfycat_url = url[:8] + 'zippy.' + url[8:] + ".webm"
+					print (gfycat_url)
+					save_image_with_url_path(gfycat_url, path_with_extension)
+				except urllib.error.URLError as err:
+					try:
+						if err.code == 403:
+							gfycat_url = url[:8] + 'giant.' + url[8:] + ".webm"
+							print (gfycat_url)
+							save_image_with_url_path(gfycat_url, path_with_extension)
+					except urllib.error.URLError as err2:
+						if err2.code == 403:
+							gfycat_url = url[:8] + 'fat.' + url[8:] + ".webm"
+							print (gfycat_url)
+							save_image_with_url_path(gfycat_url, path_with_extension)
+				
 		
-		
-		#urllib.request.urlretrieve(url, path_with_extension)
 		variable += 1
 			
 			
@@ -105,7 +134,7 @@ def handle_imgur_album(album_url):
 		#use the album api to get urls to the individual images
 		gallery_endpoint_url = "https://api.imgur.com/3/album/" + album_id + "/images"
 		#add my own client-id to the request as header
-		headers = {'Authorization' : 'Client-ID ' + client_ID }
+		headers = {'Authorization' : 'Client-ID ' + imgur_client_id }
 		request = urllib.request.Request(gallery_endpoint_url, None, headers)
 		#get the response
 		response = urllib.request.urlopen(request)
@@ -118,10 +147,10 @@ def handle_imgur_album(album_url):
 		data = json.loads(response_str)
 		#return only the 'data' portion
 		return data['data']
-	except URLError as err:
-		print ("Error code: " + error.code)
-		print ("Reason: " + error.reason)
-		print ("Headers: " + error.headers)
+	except urllib.error.URLError as err:
+		print ("Error code: " + err.code)
+		print ("Reason: " + err.reason)
+		print ("Headers: " + err.headers)
 	
 def handle_imgur_picture(picture_url):
 	try:
@@ -142,7 +171,7 @@ def handle_imgur_picture(picture_url):
 		image_endpoint_url = "https://api.imgur.com/3/image/" + pic_id
 		
 		#add client ID as header
-		headers = {'Authorization' : 'Client-ID ' + client_ID}
+		headers = {'Authorization' : 'Client-ID ' + imgur_client_id}
 		
 		#build request
 		request = urllib.request.Request(image_endpoint_url, None, headers)
@@ -155,8 +184,8 @@ def handle_imgur_picture(picture_url):
 		data = json.loads(response_str)
 		return data['data']
 		
-	except URLError as err:
-		print ("Error code: " + error.code)
-		print ("Reason: " + error.reason)
-		print ("Headers: " + error.headers)
+	except urllib.error.URLError as err:
+		print ("Error code: " + err.code)
+		print ("Reason: " + err.reason)
+		print ("Headers: " + err.headers)
 	
