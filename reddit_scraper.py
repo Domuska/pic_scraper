@@ -1,15 +1,13 @@
 import praw, urllib, json, time, re
 import os.path
 
-#goddesses
-
 #imgur api https://api.imgur.com/oauth2
 #praw api http://praw.readthedocs.io/en/stable/index.html#main-page
 #gfycat api https://developers.gfycat.com/api/
 
 global imgur_client_id 
-imgur_client_id =
-gfycat_client_id = 
+imgur_client_id = '7d9521cca4c957e'
+gfycat_client_id = '2_2olsFR'
 
 def get_pics_by_subreddit(subreddit, limit):
 	user_agent = "windows:testing_agent:0.1 (by /u/Domuska)"
@@ -19,9 +17,12 @@ def get_pics_by_subreddit(subreddit, limit):
 	#get submissions
 	submissions = reddit.get_subreddit(subreddit).get_hot(limit=thing_limit)
 	
-	path = 'C:/scraper/'
+	path = 'C:/scraper/' + subreddit
 	#variable that is used in file names
 	variable = 1
+	
+	if not os.path.exists(path):
+		os.makedirs(path)
 	
 	for submission in submissions:
 		print ("\n")
