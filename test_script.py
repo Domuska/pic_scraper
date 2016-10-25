@@ -27,7 +27,7 @@ def get_pics_by_subreddit(subreddit, limit):
 		print ("\n")
 		print(submission.url)
 		url = submission.url
-		filename = str(submission.author) + "-" + time.strftime("%Y_%m_%d_%I_%M")
+		filename = str(submission.author) + "-" + time.strftime("%Y_%m_%d_%I_%M") + "_" + str(variable)
 		fullpath = os.path.join(path, filename)
 		#handle imgur separate from other image sources, imgur can have 
 		#albums and all that jazz
@@ -82,6 +82,9 @@ def get_pics_by_subreddit(subreddit, limit):
 		#todo fix, if html5 video is in giant domain this wont work
 		#dirty fix, not nice, do something more reasonable
 		elif "gfycat" in url:
+		
+			if "https" not in url:
+				url = url[:4] + 's' + url[4:]
 			if ".webm" in url:
 				path_with_extension = fullpath + ".webm"
 				print (gfycat_url)
@@ -117,7 +120,7 @@ def get_pics_by_subreddit(subreddit, limit):
 			
 			
 def save_image_with_url_path(url, path):
-	urllib.request.urlretrieve(url, path)
+	print(urllib.request.urlretrieve(url, path))
 	
 #helper method to handle an imgur album
 #as parameter takes the ID of the album
