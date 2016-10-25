@@ -21,6 +21,16 @@ def get_pics_by_subreddit(subreddit, limit):
 	#variable that is used in file names
 	variable = 1
 	
+	#< (less than)
+	#> (greater than)
+	#: (colon)
+	#" (double quote)
+	#/ (forward slash)
+	#\ (backslash)
+	#| (vertical bar or pipe)
+	#? (question mark)
+	#* (asterisk)
+	
 	if not os.path.exists(path):
 		os.makedirs(path)
 	
@@ -28,7 +38,15 @@ def get_pics_by_subreddit(subreddit, limit):
 		print ("\n")
 		print(submission.url)
 		url = submission.url
-		filename = str(submission.author) + "-" + time.strftime("%Y_%m_%d_%I_%M") + "_" + str(variable)
+		#filename = str(submission.author) + "-" + time.strftime("%Y_%m_%d_%I_%M") + "_" + str(variable)
+		#use submission name as file name
+		title = submission.title
+		
+		#http://stackoverflow.com/questions/3939361/remove-specific-characters-from-a-string-in-python
+		#remove reserved windows characters
+		title = slugify(title)
+		filename = title + "_" + str(submission.author) + "_" + str(variable)
+		
 		fullpath = os.path.join(path, filename)
 		#handle imgur separate from other image sources, imgur can have 
 		#albums and all that jazz
@@ -192,4 +210,18 @@ def handle_imgur_picture(picture_url):
 		print ("Error code: " + err.code)
 		print ("Reason: " + err.reason)
 		print ("Headers: " + err.headers)
+		
+#http://stackoverflow.com/questions/295135/turn-a-string-into-a-valid-filename-in-python
+#modified for python 3 from above answer
+def slugify(value):
+	"""
+	Normalizes string, converts to lowercase, removes non-alpha characters,
+	and converts spaces to hyphens.
+	"""
+	import unicodedata
+	value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
+	value = value.decode('utf-8')
+	value = re.sub('[^\w\s-]', '', value)
+	value = re.sub('[-\s]+', '-', value)
+	return value
 	
