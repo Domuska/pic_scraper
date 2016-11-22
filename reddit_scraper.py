@@ -6,8 +6,8 @@ import os.path
 #gfycat api https://developers.gfycat.com/api/
 
 global imgur_client_id 
-imgur_client_id = '7d9521cca4c957e'
-gfycat_client_id = '2_2olsFR'
+imgur_client_id = 
+gfycat_client_id = 
 
 def get_pics_by_subreddit(subreddit, limit):
 	user_agent = "windows:testing_agent:0.1 (by /u/Domuska)"
@@ -20,17 +20,6 @@ def get_pics_by_subreddit(subreddit, limit):
 	path = 'C:/scraper/' + subreddit
 	#variable that is used in file names
 	variable = 1
-	
-	#< (less than)
-	#> (greater than)
-	#: (colon)
-	#" (double quote)
-	#/ (forward slash)
-	#\ (backslash)
-	#| (vertical bar or pipe)
-	#? (question mark)
-	#* (asterisk)
-	
 	if not os.path.exists(path):
 		os.makedirs(path)
 	
@@ -38,7 +27,6 @@ def get_pics_by_subreddit(subreddit, limit):
 		print ("\n")
 		print(submission.url)
 		url = submission.url
-		#filename = str(submission.author) + "-" + time.strftime("%Y_%m_%d_%I_%M") + "_" + str(variable)
 		#use submission name as file name
 		title = submission.title
 		
@@ -52,40 +40,7 @@ def get_pics_by_subreddit(subreddit, limit):
 		#albums and all that jazz
 		
 		if "imgur" in url:
-			if "/a/" in url or "gallery" in url:
-				print ("seems we gots an album")
-				album_variable = 1
-				#handle imgur endpoint stuff
-				album_data = handle_imgur_album(url)
-				#how many elements in the data
-				#len (album_data)
-				#todo: handle non-static images in albums,
-				for album in album_data:
-					album_img_url = album['link']
-					#urllib.request.urlretrieve(album_img_url, fullpath +  "_" + str(album_variable) + ".jpg")
-					path_with_extension = fullpath +  "_" + str(album_variable) + ".jpg"
-					save_image_with_url_path(album_img_url, path_with_extension)
-					album_variable += 1
-					
-				
-			#convert imgur links to pure picture links			
-			#if i.imgur is in url, it is a direct link to the pic
-			else:
-				#if "i.imgur" not in url:
-				image_data = handle_imgur_picture(url)
-				
-				if image_data['animated'] is True:
-					print ("animated image!")
-					url = image_data['mp4']
-					#urllib.request.urlretrieve(url, fullpath + filename + ".mp4")
-					path_with_extension = fullpath + ".mp4"
-					save_image_with_url_path(url, path_with_extension)
-					
-				else:
-					url = url + ".jpg"
-					#urllib.request.urlretrieve(url, fullpath + filename + ".jpg")
-					path_with_extension = fullpath + ".jpg"
-					save_image_with_url_path(url, path_with_extension)
+			download_from_imgur(url, fullpath)
 				
 		
 		elif "reddituploads" in url or "tumblr" in url: 
@@ -141,6 +96,53 @@ def get_pics_by_subreddit(subreddit, limit):
 def save_image_with_url_path(url, path):
 	print(urllib.request.urlretrieve(url, path))
 	
+	
+#download an arbitrary image or album from imgur
+#	url : the URL of the imgur image or album
+#	path : the path to the image along with the file name (example, 'c:\pics\catpicture')
+#the file will be saved to the path provided, if the URL goes to an album _IMAGENUMBER will be
+#added after the file name
+def download_from_imgur(url, image_path = 'C:\scraper\imgur_album\\'):
+
+	#todo: repair this folder creation, now a folder is created for every pic that is created
+	if not os.path.exists(image_path):
+		os.makedirs(image_path)
+	if "/a/" in url or "gallery" in url:
+		print ("seems we gots an album")
+		album_variable = 1
+		#handle imgur endpoint stuff
+		album_data = handle_imgur_album(url)
+		#how many elements in the data
+		#len (album_data)
+		#todo: handle non-static images in albums,
+		for album in album_data:
+			album_img_url = album['link']
+			#urllib.request.urlretrieve(album_img_url, fullpath +  "_" + str(album_variable) + ".jpg")
+			path_with_extension = image_path +  "_" + str(album_variable) + ".jpg"
+			save_image_with_url_path(album_img_url, path_with_extension)
+			album_variable += 1
+					
+				
+	#convert imgur links to pure picture links			
+	#if i.imgur is in url, it is a direct link to the pic
+	else:
+		#if "i.imgur" not in url:
+		image_data = handle_imgur_picture(url)
+		
+		if image_data['animated'] is True:
+			print ("animated image!")
+			url = image_data['mp4']
+			#urllib.request.urlretrieve(url, fullpath + filename + ".mp4")
+			path_with_extension = image_path + ".mp4"
+			save_image_with_url_path(url, path_with_extension)
+			
+		else:
+			url = url + ".jpg"
+			#urllib.request.urlretrieve(url, fullpath + filename + ".jpg")
+			path_with_extension = image_path + ".jpg"
+			save_image_with_url_path(url, path_with_extension)
+					
+
 #helper method to handle an imgur album
 #as parameter takes the ID of the album
 #returns: dictionary that has the info that album API returns			
@@ -148,9 +150,18 @@ def handle_imgur_album(album_url):
 
 	try:
 		#get the point where album url starts, using re and a regex
-		regex = re.search('/a/', album_url)
+		if "/a/" in album_url:
+			regex = re.search('/a/', album_url)
+		else:
+			regex = re.search('/gallery/', album_url)
 		#splice the id from the whole url
 		album_id = album_url[regex.end():]
+		
+		#the ID can have some extra stuff after url, like: ?branch_used=true
+		regex = re.search('\?', album_id)
+		if regex is not None:
+			album_id = album_id[:regex.start()]
+		
 		print("album_id: " + album_id)
 		
 		#use the album api to get urls to the individual images
@@ -170,7 +181,7 @@ def handle_imgur_album(album_url):
 		#return only the 'data' portion
 		return data['data']
 	except urllib.error.URLError as err:
-		print ("Error code: " + err.code)
+		print ("Error code: " + str(err.code))
 		print ("Reason: " + err.reason)
 		print ("Headers: " + err.headers)
 	
@@ -181,13 +192,18 @@ def handle_imgur_picture(picture_url):
 		pic_id = picture_url[regex.end():]
 		
 		#handle common file extensions
-		if 'gifv' in pic_id:
+		#if 'gifv' in pic_id:
 			#pic_id = pic_id[: - pic_id.find('.') + 2]
-			pic_id = pic_id[:-5]
-		elif '.jpg' in pic_id or '.gif' in pic_id or '.mp4' in pic_id:
+			#pic_id = pic_id[:-5]
+			#dot_position = pic_id.find('.')
+			#pic_id = pic_id[:dot_position]
+		#elif '.jpg' in pic_id or '.gif' in pic_id or '.mp4' in pic_id:
 			#pic_id = pic_id[: - pic_id.find('.') +1]
-			pic_id = pic_id[:-4]
-			
+		#	pic_id = pic_id[:-4]
+		dot_position = pic_id.find('.')
+		if dot_position != -1:
+			pic_id = pic_id[:dot_position]
+		
 		print ("pic id: " + pic_id)
 		#use the image api to get image metadata
 		image_endpoint_url = "https://api.imgur.com/3/image/" + pic_id
@@ -207,7 +223,7 @@ def handle_imgur_picture(picture_url):
 		return data['data']
 		
 	except urllib.error.URLError as err:
-		print ("Error code: " + err.code)
+		print ("Error code: " + str(err.code))
 		print ("Reason: " + err.reason)
 		print ("Headers: " + err.headers)
 		

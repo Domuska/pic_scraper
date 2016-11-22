@@ -12,4 +12,8 @@ Usage:
 	
 	-the script should download the pictures to the path provided in the script, folder might need to be already made when the script is ran
 	
+	-you can also use it to download pictures with only imgur URL, use function download_from_imgur()
+		-1st parameter is URL as a string
+		-2nd parameter is the file in your file path as a string, folder dividers in Python style as / rather than \ as is done on Windows. Don't forget the trailing /
+		
 	
