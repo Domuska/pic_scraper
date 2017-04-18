@@ -8,39 +8,9 @@ import requests
 #gfycat api https://developers.gfycat.com/api/
 
 global imgur_client_id 
-imgur_client_id = 
-gfycat_client_id = 
-
-def gfycat_stuff(gfy_id):
-	
-	client_id = 
-	client_secret = 
-	token_request_url = 'https://api.gfycat.com/v1/oauth/token'	
-	
-	
-	#requests kirjaston kikkailut
-	results = requests.get(token_request_url, params = {
-												'grant_type':'client_credentials',
-												'client_id':client_id,
-												'client_secret':client_secret})
-	print("response from gfycat: " + results.text)
-	#result_dictionary = json.loads(results.json())
-	token = results.json()['access_token']
-	#token = results_dictionary['access_token']
-	print (token)
-	
-	gfy_request_url = 'https://api.gfycat.com/v1/gfycats/'
-	gfy_request_url += gfy_id
-	results = requests.get(gfy_request_url, headers={
-												"Authorization": token})
-												
-	print("gfy request response: " + results.text)
-	webm_url = results.json()['gfyItem']['webmUrl']
-	webm_name = results.json()['gfyItem']['gfyName'] + ".webm"
-	print ('webm url : ' + webm_url)
-	urllib.request.urlretrieve(webm_url, webm_name)
-	
-	
+imgur_client_id = '7d9521cca4c957e'
+gfycat_client_id = '2_s8KaAJ'
+gfycat_client_secret = 'c-DHAXrQ3RrUoBtKLxfkiL-grj8yMGEcymTP5ORZKiJK2Z9SMB1Surf3u9N9s3Yz'	
 
 def get_pics_by_subreddit(subreddit, limit):
 	user_agent = "windows:testing_agent:0.1 (by /u/Domuska)"
@@ -84,6 +54,9 @@ def get_pics_by_subreddit(subreddit, limit):
 				path_with_extension = fullpath + ".jpg"
 				save_image_with_url_path(url, path_with_extension)
 				
+				
+				
+		#https://gfycat.com/PessimisticReadyFrog
 		#todo: properly handle gfycat urls, read API and implement
 		#gfycat uses only https
 		#dirty fix, not nice, do something more reasonable, use API maybe to ask in which domain the video is?
@@ -131,7 +104,43 @@ def get_pics_by_subreddit(subreddit, limit):
 def save_image_with_url_path(url, path):
 	print(urllib.request.urlretrieve(url, path))
 	
+#download an webm from gfycat with the gfycat ID supplied
+def download_from_gfycat_with_id(gfy_id, image_path = 'C:\scraper\gfycat_webms\\'):
 	
+	client_id = gfycat_client_id
+	token_request_url = 'https://api.gfycat.com/v1/oauth/token'	
+	
+	
+	#requests kirjaston kikkailut
+	results = requests.get(token_request_url, params = {
+												'grant_type':'client_credentials',
+												'client_id':client_id,
+												'client_secret':gfycat_client_secret})
+	print("response from gfycat: " + results.text)
+	#result_dictionary = json.loads(results.json())
+	token = results.json()['access_token']
+	#token = results_dictionary['access_token']
+	print (token)
+	
+	#get info about the GFY requested
+	gfy_request_url = 'https://api.gfycat.com/v1/gfycats/'
+	gfy_request_url += gfy_id
+	results = requests.get(gfy_request_url, headers={
+												"Authorization": token})
+									
+	#get the URL and name of the GFY
+	print("gfy request response: " + results.text)
+	webm_url = results.json()['gfyItem']['webmUrl']
+	webm_name = results.json()['gfyItem']['gfyName'] + ".webm"
+	print ('webm url : ' + webm_url)
+	
+	image_path = os.path.realpath(image_path)
+	filepath = os.path.join(image_path, webm_name)
+	
+	#save the GFY from the URL
+	urllib.request.urlretrieve(webm_url, filepath)
+	
+
 #download an arbitrary image or album from imgur
 #	url : the URL of the imgur image or album
 #	path : the path to the image along with the file name (example, 'c:\pics\catpicture')
