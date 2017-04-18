@@ -61,40 +61,51 @@ def get_pics_by_subreddit(subreddit, limit):
 		#gfycat uses only https
 		#dirty fix, not nice, do something more reasonable, use API maybe to ask in which domain the video is?
 		elif "gfycat" in url:
-			if "https" not in url:
-				url = url[:4] + 's' + url[4:]
-			if ".webm" in url:
-				path_with_extension = fullpath + ".webm"
-				print (gfycat_url)
-				save_image_with_url_path(gfycat_url, path_with_extension)
-			elif ".mp4" in url:
-				path_with_extension = fullpath + ".mp4"
-				print (gfycat_url)
-				save_image_with_url_path(gfycat_url, path_with_extension)
-			else:
-				#this try-catch is just for handling the zippy/giant/fat monstrosity
-				try:
-					path_with_extension = fullpath + ".webm"
-					#url = 'zippy.' + url + '.webm'
-					#direct urls to webms in gfycat have zippy/giant/fat and .webm extension in the url in these locations
-					gfycat_url = url[:8] + 'zippy.' + url[8:] + ".webm"
-					print (gfycat_url)
-					save_image_with_url_path(gfycat_url, path_with_extension)
-				except urllib.error.URLError as err:
-					try:
-						if err.code == 403:
-							gfycat_url = url[:8] + 'giant.' + url[8:] + ".webm"
-							print (gfycat_url)
-							save_image_with_url_path(gfycat_url, path_with_extension)
-					except urllib.error.URLError as err2:
-						try:
-							if err2.code == 403:
-								gfycat_url = url[:8] + 'fat.' + url[8:] + ".webm"
-								print (gfycat_url)
-								save_image_with_url_path(gfycat_url, path_with_extension)					
-						except urllib.error.URLError as err3:
-							if err3.code == 403:
-								print("Error 403, could not save video at url: " + gfycat_url)
+			#use a wizard's spell to reverse the url string
+			gfy_id = url[::-1]
+			print(gfy_id)
+			regex = re.search('/', gfy_id)
+			gfy_id = gfy_id[:regex.end()-1]
+			gfy_id = gfy_id[::-1]
+			print(gfy_id)
+			download_from_gfycat_with_id(gfy_id)
+			
+			
+			
+			#if "https" not in url:
+			#	url = url[:4] + 's' + url[4:]
+			#if ".webm" in url:
+			#	path_with_extension = fullpath + ".webm"
+			#	print (gfycat_url)
+			#	save_image_with_url_path(gfycat_url, path_with_extension)
+			#elif ".mp4" in url:
+			#	path_with_extension = fullpath + ".mp4"
+			#	print (gfycat_url)
+			#	save_image_with_url_path(gfycat_url, path_with_extension)
+			#else:
+			#	#this try-catch is just for handling the zippy/giant/fat monstrosity
+			#	try:
+			#		path_with_extension = fullpath + ".webm"
+			#		#url = 'zippy.' + url + '.webm'
+			#		#direct urls to webms in gfycat have zippy/giant/fat and .webm extension in the url in these locations
+			#		gfycat_url = url[:8] + 'zippy.' + url[8:] + ".webm"
+			#		print (gfycat_url)
+			#		save_image_with_url_path(gfycat_url, path_with_extension)
+			#	except urllib.error.URLError as err:
+			#		try:
+			#			if err.code == 403:
+			#				gfycat_url = url[:8] + 'giant.' + url[8:] + ".webm"
+			#				print (gfycat_url)
+			#				save_image_with_url_path(gfycat_url, path_with_extension)
+			#		except urllib.error.URLError as err2:
+			#			try:
+			#				if err2.code == 403:
+			#					gfycat_url = url[:8] + 'fat.' + url[8:] + ".webm"
+			#					print (gfycat_url)
+			#					save_image_with_url_path(gfycat_url, path_with_extension)					
+			#			except urllib.error.URLError as err3:
+			#				if err3.code == 403:
+			#					print("Error 403, could not save video at url: " + gfycat_url)
 						
 		
 		variable += 1
@@ -105,11 +116,10 @@ def save_image_with_url_path(url, path):
 	print(urllib.request.urlretrieve(url, path))
 	
 #download an webm from gfycat with the gfycat ID supplied
-def download_from_gfycat_with_id(gfy_id, image_path = 'C:\scraper\gfycat_webms\\'):
+def download_from_gfycat_with_id(gfy_id, gfy_path = 'C:\scraper\gfycat_webms\\'):
 	
 	client_id = gfycat_client_id
 	token_request_url = 'https://api.gfycat.com/v1/oauth/token'	
-	
 	
 	#requests kirjaston kikkailut
 	results = requests.get(token_request_url, params = {
@@ -134,8 +144,11 @@ def download_from_gfycat_with_id(gfy_id, image_path = 'C:\scraper\gfycat_webms\\
 	webm_name = results.json()['gfyItem']['gfyName'] + ".webm"
 	print ('webm url : ' + webm_url)
 	
-	image_path = os.path.realpath(image_path)
-	filepath = os.path.join(image_path, webm_name)
+	gfy_path = os.path.realpath(gfy_path)
+	filepath = os.path.join(gfy_path, webm_name)
+	
+	if not os.path.exists(gfy_path):
+		os.makedirs(gfy_path)
 	
 	#save the GFY from the URL
 	urllib.request.urlretrieve(webm_url, filepath)
