@@ -1,6 +1,8 @@
 import praw, urllib, json, time, re
 import os.path
 
+import requests
+
 #imgur api https://api.imgur.com/oauth2
 #praw api http://praw.readthedocs.io/en/stable/index.html#main-page
 #gfycat api https://developers.gfycat.com/api/
@@ -8,6 +10,37 @@ import os.path
 global imgur_client_id 
 imgur_client_id = 
 gfycat_client_id = 
+
+def gfycat_stuff(gfy_id):
+	
+	client_id = 
+	client_secret = 
+	token_request_url = 'https://api.gfycat.com/v1/oauth/token'	
+	
+	
+	#requests kirjaston kikkailut
+	results = requests.get(token_request_url, params = {
+												'grant_type':'client_credentials',
+												'client_id':client_id,
+												'client_secret':client_secret})
+	print("response from gfycat: " + results.text)
+	#result_dictionary = json.loads(results.json())
+	token = results.json()['access_token']
+	#token = results_dictionary['access_token']
+	print (token)
+	
+	gfy_request_url = 'https://api.gfycat.com/v1/gfycats/'
+	gfy_request_url += gfy_id
+	results = requests.get(gfy_request_url, headers={
+												"Authorization": token})
+												
+	print("gfy request response: " + results.text)
+	webm_url = results.json()['gfyItem']['webmUrl']
+	webm_name = results.json()['gfyItem']['gfyName'] + ".webm"
+	print ('webm url : ' + webm_url)
+	urllib.request.urlretrieve(webm_url, webm_name)
+	
+	
 
 def get_pics_by_subreddit(subreddit, limit):
 	user_agent = "windows:testing_agent:0.1 (by /u/Domuska)"
@@ -53,10 +86,8 @@ def get_pics_by_subreddit(subreddit, limit):
 				
 		#todo: properly handle gfycat urls, read API and implement
 		#gfycat uses only https
-		#todo fix, if html5 video is in giant domain this wont work
-		#dirty fix, not nice, do something more reasonable
+		#dirty fix, not nice, do something more reasonable, use API maybe to ask in which domain the video is?
 		elif "gfycat" in url:
-		
 			if "https" not in url:
 				url = url[:4] + 's' + url[4:]
 			if ".webm" in url:
@@ -83,11 +114,15 @@ def get_pics_by_subreddit(subreddit, limit):
 							print (gfycat_url)
 							save_image_with_url_path(gfycat_url, path_with_extension)
 					except urllib.error.URLError as err2:
-						if err2.code == 403:
-							gfycat_url = url[:8] + 'fat.' + url[8:] + ".webm"
-							print (gfycat_url)
-							save_image_with_url_path(gfycat_url, path_with_extension)
-				
+						try:
+							if err2.code == 403:
+								gfycat_url = url[:8] + 'fat.' + url[8:] + ".webm"
+								print (gfycat_url)
+								save_image_with_url_path(gfycat_url, path_with_extension)					
+						except urllib.error.URLError as err3:
+							if err3.code == 403:
+								print("Error 403, could not save video at url: " + gfycat_url)
+						
 		
 		variable += 1
 			

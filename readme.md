@@ -7,7 +7,7 @@ Usage:
 	-in future might need to get your own client ID for gfycat at https://developers.gfycat.com/api/
 	-run python
 	
-	import test_script as r
+	import reddit_scraper as r
 	r.get_pics_by_subreddit('pics', 20)
 	
 	-the script should download the pictures to the path provided in the script, folder might need to be already made when the script is ran
