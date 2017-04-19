@@ -52,12 +52,12 @@ def get_pics_by_subreddit(subreddit, limit):
 			filename = title + "_" + str(submission.author) + "_" + str(variable)
 			
 			fullpath = os.path.join(path, filename)
-			#handle imgur separate from other image sources, imgur can have 
-			#albums and all that jazz
 			
+			#handle imgur separate from other image sources, imgur can have 
+			#albums and animated videos
 			if "imgur" in url:
 				try:
-					download_from_imgur(url, fullpath)
+					download_from_imgur(url, filename, path)
 				except urllib.error.URLError as err:
 					print ("Error code: " + str(err.code))
 					print ("Reason: " + err.reason)
@@ -92,7 +92,7 @@ def get_pics_by_subreddit(subreddit, limit):
 				gfy_id = gfy_id[:regex.end()-1]
 				gfy_id = gfy_id[::-1]
 				print(gfy_id)
-				download_from_gfycat_with_id(gfy_id, fullpath)
+				download_from_gfycat_with_id(gfy_id, filename, path)
 				
 				
 				
@@ -146,7 +146,7 @@ def save_image_with_url_path(url, path):
 	print(urllib.request.urlretrieve(url, path))
 	
 #download an webm from gfycat with the gfycat ID supplied
-def download_from_gfycat_with_id(gfy_id, gfy_path = 'C:\scraper\gfycat_webms\\'):
+def download_from_gfycat_with_id(gfy_id, filename, gfy_path = 'C:\scraper\gfycat_webms\\'):
 	try:
 		client_id = gfycat_client_id
 		token_request_url = 'https://api.gfycat.com/v1/oauth/token'
@@ -178,6 +178,7 @@ def download_from_gfycat_with_id(gfy_id, gfy_path = 'C:\scraper\gfycat_webms\\')
 		if not os.path.exists(gfy_path):
 			os.makedirs(gfy_path)
 		
+		gfy_path = os.path.join(gfy_path, filename)
 		gfy_path = gfy_path + "_" + webm_name
 		#filepath = os.path.join(gfy_path, webm_name)
 		
@@ -196,11 +197,13 @@ def download_from_gfycat_with_id(gfy_id, gfy_path = 'C:\scraper\gfycat_webms\\')
 #	path : the path to the image along with the file name (example, 'c:\pics\catpicture')
 #the file will be saved to the path provided, if the URL goes to an album _IMAGENUMBER will be
 #added after the file name
-def download_from_imgur(url, image_path = 'C:\scraper\imgur_album\\', ):
+def download_from_imgur(url, filename, image_path = 'C:\scraper\imgur\\', ):
 
-	#todo: repair this folder creation, now a folder is created for every pic that is created
+	#make sure the folder path exists
 	if not os.path.exists(image_path):
 		os.makedirs(image_path)
+	
+	
 	if "/a/" in url or "gallery" in url:
 		print ("seems we gots an album")
 		album_variable = 1
@@ -212,7 +215,7 @@ def download_from_imgur(url, image_path = 'C:\scraper\imgur_album\\', ):
 		for album in album_data:
 			album_img_url = album['link']
 			#urllib.request.urlretrieve(album_img_url, fullpath +  "_" + str(album_variable) + ".jpg")
-			path_with_extension = image_path +  "_" + str(album_variable) + ".jpg"
+			path_with_extension = image_path + filename +  "_" + str(album_variable) + ".jpg"
 			save_image_with_url_path(album_img_url, path_with_extension)
 			album_variable += 1
 			images_downloaded += 1
@@ -230,14 +233,14 @@ def download_from_imgur(url, image_path = 'C:\scraper\imgur_album\\', ):
 			print ("animated image!")
 			url = image_data['mp4']
 			#urllib.request.urlretrieve(url, fullpath + filename + ".mp4")
-			path_with_extension = image_path + ".mp4"
+			path_with_extension = image_path + filename + ".mp4"
 			save_image_with_url_path(url, path_with_extension)
 			videos_downloaded += 1
 			
 		else:
 			url = url + ".jpg"
 			#urllib.request.urlretrieve(url, fullpath + filename + ".jpg")
-			path_with_extension = image_path + ".jpg"
+			path_with_extension = image_path + filename + ".jpg"
 			save_image_with_url_path(url, path_with_extension)
 			images_downloaded += 1
 					
