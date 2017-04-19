@@ -1,4 +1,4 @@
-import praw, urllib, json, time, re
+import praw, urllib, json, time, re, api_keys
 import os.path
 
 #for web requests
@@ -12,12 +12,16 @@ import logging
 #praw api http://praw.readthedocs.io/en/stable/index.html#main-page
 #gfycat api https://developers.gfycat.com/api/
 
-global imgur_client_id 
-imgur_client_id = 
-gfycat_client_id = 
-gfycat_client_secret = 
-
 def get_pics_by_subreddit(subreddit, limit):
+		
+	global imgur_client_id
+	imgur_client_id = api_keys.imgur_client_id
+	global gfycat_client_id
+	gfycat_client_id = api_keys.gfycat_client_id
+	global gfycat_client_secret
+	gfycat_client_secret = api_keys.gfycat_client_secret
+	
+	
 	user_agent = "windows:testing_agent:0.1 (by /u/Domuska)"
 	reddit = praw.Reddit(user_agent = user_agent)
 	thing_limit = limit
