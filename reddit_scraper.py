@@ -23,22 +23,29 @@ def get_pics_by_subreddit(subreddit, limit):
 	
 	
 	user_agent = "windows:testing_agent:0.1 (by /u/Domuska)"
-	reddit = praw.Reddit(user_agent = user_agent)
+	reddit = praw.Reddit(user_agent = user_agent, client_id = 'xyvZRr2fAFmFfg', client_secret = None)
 	thing_limit = limit
 	
 	#get submissions
-	submissions = reddit.get_subreddit(subreddit).get_hot(limit=thing_limit)
+	#submissions = reddit.get_subreddit(subreddit).get_hot(limit=thing_limit)
+	submissions = reddit.subreddit(subreddit).hot(limit=thing_limit)
 	
 	path = 'C:/scraper/' + subreddit
 	#variable that is used in file names
 	variable = 1
-	images_downloaded = 0
-	albums_downloaded = 0
-	videos_downloaded = 0
+	
 	
 	try:
 		if not os.path.exists(path):
 			os.makedirs(path)
+			
+			
+		global images_downloaded
+		images_downloaded = 0
+		global albums_downloaded
+		albums_downloaded = 0
+		global videos_downloaded
+		videos_downloaded = 0
 		
 		for submission in submissions:
 			print ("\n")
@@ -52,7 +59,7 @@ def get_pics_by_subreddit(subreddit, limit):
 			title = slugify(title)
 			#if reddit submission title only contains unallowed characters, add something as title
 			if len(title) == 0:
-				len = variable
+				title = variable
 			filename = title + "_" + str(submission.author) + "_" + str(variable)
 			
 			fullpath = os.path.join(path, filename)
@@ -139,9 +146,9 @@ def get_pics_by_subreddit(subreddit, limit):
 			variable += 1
 				
 		print("\n\nDownload finished!\n")
-		print("Images downloaded: " + images_downloaded + "\n")
-		print("Videos downloaded: " + videos_downloaded + "\n")
-		print("Albums downloaded: " + albums_downloaded)
+		print("Images downloaded: " + str(images_downloaded) + "\n")
+		print("Videos downloaded: " + str(videos_downloaded) + "\n")
+		print("Albums downloaded: " + str(albums_downloaded))
 	
 	except Exception as e:
 		logging.error(traceback.format_exc())
@@ -151,6 +158,11 @@ def save_image_with_url_path(url, path):
 	
 #download an webm from gfycat with the gfycat ID supplied
 def download_from_gfycat_with_id(gfy_id, filename, gfy_path = 'C:\scraper\gfycat_webms\\'):
+
+	global images_downloaded
+	global albums_downloaded
+	global videos_downloaded
+	
 	try:
 		client_id = gfycat_client_id
 		token_request_url = 'https://api.gfycat.com/v1/oauth/token'
@@ -203,6 +215,10 @@ def download_from_gfycat_with_id(gfy_id, filename, gfy_path = 'C:\scraper\gfycat
 #added after the file name
 def download_from_imgur(url, filename, image_path = 'C:\scraper\imgur\\', ):
 
+	global images_downloaded
+	global albums_downloaded
+	global videos_downloaded
+	
 	#make sure the folder path exists
 	if not os.path.exists(image_path):
 		os.makedirs(image_path)
