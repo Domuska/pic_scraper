@@ -119,7 +119,7 @@ def consume_submissions(submission, running_variable, path):
 	title = slugify(title)
 	# if reddit submission title only contains unallowed characters, add something as title
 	if len(title) == 0:
-		title = running_variable
+		title = "image" + str(running_variable)
 	filename = title + "_" + str(submission.author) + "_" + str(running_variable)
 
 	fullpath = os.path.join(path, filename)
@@ -139,7 +139,7 @@ def consume_submissions(submission, running_variable, path):
 				return 0
 
 
-	elif "reddituploads" in url or "tumblr" in url or "i.redd.it" in url:
+	elif "reddituploads" in url or "tumblr" in url or "i.redd.it" in url or "pbs.twimg" in url:
 		if ".gif" in url:
 			path_with_extension = fullpath + ".gif"
 			save_image_with_url_path(url, path_with_extension)
