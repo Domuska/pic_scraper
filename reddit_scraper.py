@@ -223,6 +223,8 @@ def download_from_imgur(url, filename, image_path = 'C:\scraper\imgur\\', ):
 	if not os.path.exists(image_path):
 		os.makedirs(image_path)
 	
+	#join the file path and file name
+	full_file_path = os.path.join(image_path, filename)
 	
 	if "/a/" in url or "gallery" in url:
 		print ("seems we gots an album")
@@ -235,7 +237,8 @@ def download_from_imgur(url, filename, image_path = 'C:\scraper\imgur\\', ):
 		for album in album_data:
 			album_img_url = album['link']
 			#urllib.request.urlretrieve(album_img_url, fullpath +  "_" + str(album_variable) + ".jpg")
-			path_with_extension = image_path + filename +  "_" + str(album_variable) + ".jpg"
+			#add the album variable and file extension to file path
+			path_with_extension = full_file_path +  "_" + str(album_variable) + ".jpg"
 			save_image_with_url_path(album_img_url, path_with_extension)
 			album_variable += 1
 			images_downloaded += 1
@@ -253,14 +256,16 @@ def download_from_imgur(url, filename, image_path = 'C:\scraper\imgur\\', ):
 			print ("animated image!")
 			url = image_data['mp4']
 			#urllib.request.urlretrieve(url, fullpath + filename + ".mp4")
-			path_with_extension = image_path + filename + ".mp4"
+			#add the correct file extension to file path
+			path_with_extension = full_file_path + ".mp4"
 			save_image_with_url_path(url, path_with_extension)
 			videos_downloaded += 1
 			
 		else:
 			url = url + ".jpg"
 			#urllib.request.urlretrieve(url, fullpath + filename + ".jpg")
-			path_with_extension = image_path + filename + ".jpg"
+			#add the extension to file path
+			path_with_extension = full_file_path + ".jpg"
 			save_image_with_url_path(url, path_with_extension)
 			images_downloaded += 1
 					
