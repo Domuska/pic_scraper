@@ -12,23 +12,50 @@ import logging
 #praw api http://praw.readthedocs.io/en/stable/index.html#main-page
 #gfycat api https://developers.gfycat.com/api/
 
+global imgur_client_id
+imgur_client_id = api_keys.imgur_client_id
+global gfycat_client_id
+gfycat_client_id = api_keys.gfycat_client_id
+global gfycat_client_secret
+gfycat_client_secret = api_keys.gfycat_client_secret
+global reddit_client_id
+reddit_client_id = api_keys.reddit_client_id
+
 global user_agent
 user_agent = "windows:testing_agent:0.1 (by /u/Domuska)"
 
+#download pictures by username
+# username: reddit user's username, for example 'certifiedLol'
+# limit: limit how many pictures should be downloaded, for example 5
 def get_pics_by_user(username, limit):
-	#print ('hei')
 	reddit = praw.Reddit(user_agent=user_agent, client_id=reddit_client_id, client_secret=None)
+	user = reddit.redditor(username)
+	i = 1
+
+	filepath = 'C:/scraper/' + username
+	running_variable = 1
+
+	try:
+		if not os.path.exists(filepath):
+			os.makedirs(filepath)
+
+		#submissions.hot can be given the limit argument so it is passed to the ListingGenerator as argument
+		#.hot seems to get submissions by date, newest submissions first, other possibilities could be
+		#.new or .top, see http://praw.readthedocs.io/en/latest/code_overview/other/sublisting.html#praw.models.listing.mixins.redditor.SubListing
+		for submission in user.submissions.hot(limit=limit):
+			#print(str(i) + ": " + submission.url)
+			#i += 1
+			#url = submission.url
+			consume_submissions(submission, running_variable, filepath)
+			running_variable += 1
+
+	except Exception as e:
+		logging.error(traceback.format_exc())
+
+
+
 
 def get_pics_by_subreddit(subreddit, limit):
-
-	global imgur_client_id
-	imgur_client_id = api_keys.imgur_client_id
-	global gfycat_client_id
-	gfycat_client_id = api_keys.gfycat_client_id
-	global gfycat_client_secret
-	gfycat_client_secret = api_keys.gfycat_client_secret
-	global reddit_client_id
-	reddit_client_id = api_keys.reddit_client_id
 
 	download_logger = DownloadCounter()
 
@@ -56,107 +83,7 @@ def get_pics_by_subreddit(subreddit, limit):
 		#videos_downloaded = 0
 
 		for submission in submissions:
-			print ("\n")
-			print(submission.url)
-			url = submission.url
-			#use submission name as file name
-			title = submission.title
-
-			#http://stackoverflow.com/questions/3939361/remove-specific-characters-from-a-string-in-python
-			#remove reserved windows characters
-			title = slugify(title)
-			#if reddit submission title only contains unallowed characters, add something as title
-			if len(title) == 0:
-				title = variable
-			filename = title + "_" + str(submission.author) + "_" + str(variable)
-
-			fullpath = os.path.join(path, filename)
-
-			#handle imgur separate from other image sources, imgur can have
-			#albums and animated videos
-			if "imgur" in url:
-				try:
-					download_from_imgur(url, filename, path)
-				except urllib.error.URLError as err:
-					print ("Error code: " + str(err.code))
-					print ("Reason: " + err.reason)
-					print ("Headers: " + err.headers)
-
-					if err.code == 429:
-						print ("Stopping downloads, daily limit reached")
-						return 0
-
-
-			elif "reddituploads" in url or "tumblr" in url or "i.redd.it" in url:
-				if ".gif" in url:
-					path_with_extension = fullpath + ".gif"
-					save_image_with_url_path(url, path_with_extension)
-					#images_downloaded += 1
-					download_logger.images_downloaded += 1
-				else:
-					if ".png" in url:
-						path_with_extension = fullpath + ".png"
-					else:
-						path_with_extension = fullpath + ".jpg"
-					save_image_with_url_path(url, path_with_extension)
-					#images_downloaded += 1
-					download_logger.images_downloaded += 1
-
-
-
-			#todo: properly handle gfycat urls, read API and implement
-			#gfycat uses only https
-			#dirty fix, not nice, do something more reasonable, use API maybe to ask in which domain the video is?
-			elif "gfycat" in url:
-				#use a wizard's spell to reverse the url string
-				gfy_id = url[::-1]
-				print(gfy_id)
-				#remove all but the end of the url (which is the ID)
-				regex = re.search('/', gfy_id)
-				gfy_id = gfy_id[:regex.end()-1]
-				# re-revert the URL so we have just the ID left
-				gfy_id = gfy_id[::-1]
-				print(gfy_id)
-				download_from_gfycat_with_id(gfy_id, filename, path)
-
-
-
-				#if "https" not in url:
-				#	url = url[:4] + 's' + url[4:]
-				#if ".webm" in url:
-				#	path_with_extension = fullpath + ".webm"
-				#	print (gfycat_url)
-				#	save_image_with_url_path(gfycat_url, path_with_extension)
-				#elif ".mp4" in url:
-				#	path_with_extension = fullpath + ".mp4"
-				#	print (gfycat_url)
-				#	save_image_with_url_path(gfycat_url, path_with_extension)
-				#else:
-				#	#this try-catch is just for handling the zippy/giant/fat monstrosity
-				#	try:
-				#		path_with_extension = fullpath + ".webm"
-				#		#url = 'zippy.' + url + '.webm'
-				#		#direct urls to webms in gfycat have zippy/giant/fat and .webm extension in the url in these locations
-				#		gfycat_url = url[:8] + 'zippy.' + url[8:] + ".webm"
-				#		print (gfycat_url)
-				#		save_image_with_url_path(gfycat_url, path_with_extension)
-				#	except urllib.error.URLError as err:
-				#		try:
-				#			if err.code == 403:
-				#				gfycat_url = url[:8] + 'giant.' + url[8:] + ".webm"
-				#				print (gfycat_url)
-				#				save_image_with_url_path(gfycat_url, path_with_extension)
-				#		except urllib.error.URLError as err2:
-				#			try:
-				#				if err2.code == 403:
-				#					gfycat_url = url[:8] + 'fat.' + url[8:] + ".webm"
-				#					print (gfycat_url)
-				#					save_image_with_url_path(gfycat_url, path_with_extension)
-				#			except urllib.error.URLError as err3:
-				#				if err3.code == 403:
-				#					print("Error 403, could not save video at url: " + gfycat_url)
-
-
+			consume_submissions(submission, variable, path)
 			variable += 1
 
 		print("\n\nDownload finished!\n")
@@ -172,6 +99,78 @@ class DownloadCounter:
 	images_downloaded = 0
 	albums_downloaded = 0
 	videos_downloaded = 0
+
+#used for handling individual reddit submissions, attempts to save the submission as .jpg, .png, .mp4 or as .webm
+#file from different hosting places
+# submission: a reddit submission
+# running_variable: a variable that is appended to file names (in case of multiple same titles in the submissions)
+# path: the folder where the files should be downloaded to
+def consume_submissions(submission, running_variable, path):
+	print("\n")
+	print(submission.url)
+	url = submission.url
+	# use submission name as file name
+	title = submission.title
+
+	download_logger = DownloadCounter
+
+	# http://stackoverflow.com/questions/3939361/remove-specific-characters-from-a-string-in-python
+	# remove reserved windows characters
+	title = slugify(title)
+	# if reddit submission title only contains unallowed characters, add something as title
+	if len(title) == 0:
+		title = running_variable
+	filename = title + "_" + str(submission.author) + "_" + str(running_variable)
+
+	fullpath = os.path.join(path, filename)
+
+	# handle imgur separate from other image sources, imgur can have
+	# albums and animated videos
+	if "imgur" in url:
+		try:
+			download_from_imgur(url, filename, path)
+		except urllib.error.URLError as err:
+			print("Error code: " + str(err.code))
+			print("Reason: " + err.reason)
+			print("Headers: " + err.headers)
+
+			if err.code == 429:
+				print("Stopping downloads, daily limit reached")
+				return 0
+
+
+	elif "reddituploads" in url or "tumblr" in url or "i.redd.it" in url:
+		if ".gif" in url:
+			path_with_extension = fullpath + ".gif"
+			save_image_with_url_path(url, path_with_extension)
+			# images_downloaded += 1
+			download_logger.images_downloaded += 1
+		else:
+			if ".png" in url:
+				path_with_extension = fullpath + ".png"
+			else:
+				path_with_extension = fullpath + ".jpg"
+			save_image_with_url_path(url, path_with_extension)
+			# images_downloaded += 1
+			download_logger.images_downloaded += 1
+
+
+
+	# todo: properly handle gfycat urls, read API and implement
+	# gfycat uses only https
+	# dirty fix, not nice, do something more reasonable, use API maybe to ask in which domain the video is?
+	elif "gfycat" in url:
+		# use a wizard's spell to reverse the url string
+		gfy_id = url[::-1]
+		print(gfy_id)
+		# remove all but the end of the url (which is the ID)
+		regex = re.search('/', gfy_id)
+		gfy_id = gfy_id[:regex.end() - 1]
+		# re-revert the URL so we have just the ID left
+		gfy_id = gfy_id[::-1]
+		print(gfy_id)
+		download_from_gfycat_with_id(gfy_id, filename, path)
+
 
 
 def save_image_with_url_path(url, path):
