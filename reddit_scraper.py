@@ -12,6 +12,13 @@ import logging
 #praw api http://praw.readthedocs.io/en/stable/index.html#main-page
 #gfycat api https://developers.gfycat.com/api/
 
+global user_agent
+user_agent = "windows:testing_agent:0.1 (by /u/Domuska)"
+
+def get_pics_by_user(username, limit):
+	#print ('hei')
+	reddit = praw.Reddit(user_agent=user_agent, client_id=reddit_client_id, client_secret=None)
+
 def get_pics_by_subreddit(subreddit, limit):
 
 	global imgur_client_id
@@ -20,11 +27,12 @@ def get_pics_by_subreddit(subreddit, limit):
 	gfycat_client_id = api_keys.gfycat_client_id
 	global gfycat_client_secret
 	gfycat_client_secret = api_keys.gfycat_client_secret
+	global reddit_client_id
+	reddit_client_id = api_keys.reddit_client_id
 
 	download_logger = DownloadCounter()
 
-	user_agent = "windows:testing_agent:0.1 (by /u/Domuska)"
-	reddit = praw.Reddit(user_agent = user_agent, client_id = 'xyvZRr2fAFmFfg', client_secret = None)
+	reddit = praw.Reddit(user_agent = user_agent, client_id = reddit_client_id, client_secret = None)
 	thing_limit = limit
 
 	#get submissions
