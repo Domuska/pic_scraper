@@ -117,6 +117,7 @@ def consume_submissions(submission, running_variable, path):
 	# http://stackoverflow.com/questions/3939361/remove-specific-characters-from-a-string-in-python
 	# remove reserved windows characters
 	title = slugify(title)
+	title = limitSubmissionLength(title)
 	# if reddit submission title only contains unallowed characters, add something as title
 	if len(title) == 0:
 		title = running_variable
@@ -396,3 +397,10 @@ def slugify(value):
 	value = re.sub('[^\w\s-]', '', value)
 	value = re.sub('[-\s]+', '-', value)
 	return value
+
+#shorten the name of the file to 200 characters - Windows won't accept file names longer than 260 symbols
+def limitSubmissionLength(fileName):
+	if len(fileName) > 200:
+		fileName = fileName[0:200]
+	return fileName
+	
