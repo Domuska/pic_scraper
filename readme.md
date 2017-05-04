@@ -28,3 +28,6 @@ Usage:
 		-2nd parameter is the file in your file path as a string, folder dividers in Python style as / rather than \ as is done on Windows. Don't forget the trailing /
 		
 	
+	
+Icon for the GUI application by OmmoZoubayr at https://www.iconfinder.com/z-colors
+Icon for the folder button by Wallec at http://www.iconarchive.com/artist/wwalczyszyn.html

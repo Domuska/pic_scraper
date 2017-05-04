@@ -27,15 +27,21 @@ reddit_client_id = api_keys.reddit_client_id
 global user_agent
 user_agent = "windows:testing_agent:0.1 (by /u/Domuska)"
 
+global DEFAULT_FILE_PATH
+DEFAULT_FILE_PATH = "C:/scraper/"
+
 #download pictures by username
 # username: reddit user's username, for example 'certifiedLol'
 # limit: limit how many pictures should be downloaded, for example 5
-def get_pics_by_user(username, limit):
+def get_pics_by_user(username, limit, filePathArg=DEFAULT_FILE_PATH):
 	reddit = praw.Reddit(user_agent=user_agent, client_id=reddit_client_id, client_secret=None)
 	user = reddit.redditor(username)
 	i = 1
+	print("hei " + filePathArg)
 
-	filepath = 'C:/scraper/' + username
+	#filepath = filePathArg + username
+	filepath = os.path.join(filePathArg + username)
+	print("file path:" + filepath)	
 	running_variable = 1
 
 	try:
@@ -57,8 +63,7 @@ def get_pics_by_user(username, limit):
 
 
 
-
-def get_pics_by_subreddit(subreddit, limit):
+def get_pics_by_subreddit(subreddit, limit, filePathArg=DEFAULT_FILE_PATH):
 
 	download_logger = DownloadCounter()
 
@@ -69,7 +74,10 @@ def get_pics_by_subreddit(subreddit, limit):
 	#submissions = reddit.get_subreddit(subreddit).get_hot(limit=thing_limit)
 	submissions = reddit.subreddit(subreddit).hot(limit=thing_limit)
 
-	path = 'C:/scraper/' + subreddit
+	
+	path = os.path.join(filePathArg + subreddit)
+	print("file path:" + path)
+	
 	#variable that is used in file names
 	variable = 1
 
@@ -408,30 +416,54 @@ def limitSubmissionLength(fileName):
 	return fileName
 	
 def buttonPress(button):
-	if button=="Download":
-		if app.getRadioButton("byWhich") == "User name":
-			username = app.getEntry("mediaSource")
-			numberOfEntries = int(app.getEntry("postsRequested"))
-			get_pics_by_user(username, numberOfEntries)
-			#get_pics_by_user(username fieldistä, limit fieldistä)
-		else:
-			print ("by subreddit name, dl " + str(int(app.getEntry("postsRequested"))) + " posts")
-			subredditName = app.getEntry("mediaSource")
-			numberOfEntries = int(app.getEntry("postsRequested"))
-			get_pics_by_subreddit(subredditName, numberOfEntries)
-			
-			
+	if app.getEntry("mediaSource") == "":
+		app.warningBox("No media source", "Please enter either a redditors username or a subreddit")
+	elif app.getEntry("postsRequested") == 0:
+		app.warningBox("Incorrect amount", "Please enter a number of posts you would like to download")
+	else:
+		if button=="Download":
+			if app.getRadioButton("byWhich") == "User name":
+				username = app.getEntry("mediaSource")
+				numberOfEntries = int(app.getEntry("postsRequested"))
+				filePath = app.getEntry("file")
+				if filePath == "":
+					get_pics_by_user(username, numberOfEntries)
+				else:
+					get_pics_by_user(username, numberOfEntries, filePath)
+				#get_pics_by_user(username fieldistä, limit fieldistä)
+			else:
+				print ("by subreddit name, dl " + str(int(app.getEntry("postsRequested"))) + " posts")
+				subredditName = app.getEntry("mediaSource")
+				numberOfEntries = int(app.getEntry("postsRequested"))
+				filePath = app.getEntry("file")
+				if filePath == "":
+					get_pics_by_subreddit(subredditName, numberOfEntries)
+				else:
+					get_pics_by_subreddit(subredditName, numberOfEntries, filePath)
+				
+
+def openFileBrowser(button):
+	filepath = app.directoryBox("Choose a folder") + os.sep
+	print(filepath)
+	app.setEntry("file", filepath)
+
 #Start the program
 app = gui("Reddit media downloader")
 
-app.addRadioButton("byWhich", "User name", 0, 1)
-app.addRadioButton("byWhich", "Subreddit", 0, 2) 
+app.addRadioButton("byWhich", "Subreddit", 0, 1)
+app.addRadioButton("byWhich", "User name", 0, 2)
 app.addLabel("downloadby", "Download by", 0, 0)  # Row 0,Column 0
 app.addLabel("mediaSourceLabel", "Username or Subreddit", 1, 0)              # Row 1,Column 0
 app.addEntry("mediaSource", 1, 1)                           # Row 1,Column 1
 app.addLabel("postsRequested", "Number of posts requested", 2, 0)
 app.addNumericEntry("postsRequested", 2, 1)
-app.addButtons(["Download"], buttonPress, 3, 0, 2) # Row 3,Column 0,Span 2
 
+app.addLabel("fileLabel", "Media save path:", 3, 0)
+app.addEntry("file", 3, 1)
+app.addButton("openFileBrowser", openFileBrowser, 3, 2)
+app.setButtonImage("openFileBrowser", "folder_icon_small.png")
 
+app.addButtons(["Download"], buttonPress, 4, 0) # Row 3,Column 0,Span 2
+
+app.setIcon("icon.png")
 app.go()
