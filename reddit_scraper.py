@@ -426,16 +426,17 @@ def buttonPress(button):
 				username = app.getEntry("mediaSource")
 				numberOfEntries = int(app.getEntry("postsRequested"))
 				filePath = app.getEntry("file")
+				#if filepath is not set, maybe should add some error correction here if path is not correct?
 				if filePath == "":
 					get_pics_by_user(username, numberOfEntries)
 				else:
 					get_pics_by_user(username, numberOfEntries, filePath)
-				#get_pics_by_user(username fieldistä, limit fieldistä)
 			else:
 				print ("by subreddit name, dl " + str(int(app.getEntry("postsRequested"))) + " posts")
 				subredditName = app.getEntry("mediaSource")
 				numberOfEntries = int(app.getEntry("postsRequested"))
 				filePath = app.getEntry("file")
+				#if filepath not set, maybe should add some error correction here if path is not correct?
 				if filePath == "":
 					get_pics_by_subreddit(subredditName, numberOfEntries)
 				else:
@@ -443,7 +444,9 @@ def buttonPress(button):
 				
 
 def openFileBrowser(button):
-	filepath = app.directoryBox("Choose a folder") + os.sep
+	filepath = app.directoryBox("Choose a folder")
+	#normalize the path to the OS path, add trailing file separator
+	filepath = os.path.normpath(filepath) + os.sep
 	print(filepath)
 	app.setEntry("file", filepath)
 
