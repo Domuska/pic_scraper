@@ -1,6 +1,9 @@
 import praw, urllib, json, time, re, api_keys
 import os.path
 
+#for creating GUI
+from appJar import gui
+
 #for web requests
 import requests
 
@@ -396,3 +399,33 @@ def slugify(value):
 	value = re.sub('[^\w\s-]', '', value)
 	value = re.sub('[-\s]+', '-', value)
 	return value
+
+	
+def buttonPress(button):
+	if button=="Download":
+		if app.getRadioButton("byWhich") == "User name":
+			username = app.getEntry("mediaSource")
+			numberOfEntries = int(app.getEntry("postsRequested"))
+			get_pics_by_user(username, numberOfEntries)
+			#get_pics_by_user(username fieldistä, limit fieldistä)
+		else:
+			print ("by subreddit name, dl " + str(int(app.getEntry("postsRequested"))) + " posts")
+			subredditName = app.getEntry("mediaSource")
+			numberOfEntries = int(app.getEntry("postsRequested"))
+			get_pics_by_subreddit(subredditName, numberOfEntries)
+			
+			
+#Start the program
+app = gui("Reddit media downloader")
+
+app.addRadioButton("byWhich", "User name", 0, 1)
+app.addRadioButton("byWhich", "Subreddit", 0, 2) 
+app.addLabel("downloadby", "Download by", 0, 0)  # Row 0,Column 0
+app.addLabel("mediaSourceLabel", "Username or Subreddit", 1, 0)              # Row 1,Column 0
+app.addEntry("mediaSource", 1, 1)                           # Row 1,Column 1
+app.addLabel("postsRequested", "Number of posts requested", 2, 0)
+app.addNumericEntry("postsRequested", 2, 1)
+app.addButtons(["Download"], buttonPress, 3, 0, 2) # Row 3,Column 0,Span 2
+
+
+app.go()
